@@ -802,7 +802,7 @@ def MusselCarbonContent(Msimulation,SCoption,Rea,Pburial,Pdrdoc,Pirdoc,pCO2_0,Co
     CBFaeces = 2*(Pburial+Pirdoc)*OrganicCarbonFaeces
     dif_CBFaeces = differencesX_X0(CBFaeces[listIndex])
     AlkalinityFaeces = -dif_CBFaeces/12/6.3*100
-    AlkalinityFaeces_v = CBFaeces/12/6.3*100
+    AlkalinityFaeces_v = -CBFaeces/12/6.3*100
     VarLENindex.append(NULLvarLEN)
     VarLENindex1.append(AlkalinityFaeces)    
     # construc the dataFrame with data
@@ -995,10 +995,10 @@ def SaveDataCarbonExcel(CarbonOUT,URL,name):
     NamesAlkcon = ['MusselFlesh','InorganicShell','OrganicShell','Ammonium Excretion','BudgetFaeces','Total']                   
     NamesC = ['OrganicFlesh','OrganicShell','InorganicShell','Respiration','DRDOC',
               'Shell Respiration','Shell DRDOC','OrganicFaeces','BudgetFaeces','Total']
-    NamesCO2 = ['OrganicFlesh','OrganicShell','InorganicShell','BioCalcification','Respiration','DRDOC',
+    NamesCO2 = ['OrganicFlesh','OrganicShell','InorganicShell','Calcification','Respiration','DRDOC',
                 'Shell Respiration','Shell DRDOC','OrganicFaeces','BudgetFaeces',
-                'Total','TotalFlesh','TotalShell','CarbonFootprint','FleshCarbonFootprint',
-                'ShellCarbonFootprint']
+                'TotalBudget','FleshBudget','ShellBudget','TotalFootprint','FleshFootprint',
+                'ShellFootprint']
     NamesCF = ['Mussel','Flesh','Shell','CFmussel','CFflesh','CFshell']
     NamesInputs = ['SST','TPM','POM','Rad','sal','Dates']
     IndexData = [[1],NamesAlk,NamesAlkcon,NamesC,NamesCO2,NamesCF,NamesC,[1],NamesInputs]
@@ -1231,16 +1231,16 @@ def plotCarbonOut(CarbonOUT,XlabelOp,options):
     T_format = '%m-%d' # full date '%Y-%m-%d'
     T_interval = int(np.round(len(L)/10)) # to have 10 ticklabel
     TextTitle = 'Seeding date (M-D): ' + '{:%m-%d}'.format(TT[0])
-    OptionVar = ['Alkalinity ($10^{-2}$ mol)','Alkalinity ($10^{-6}$ mol/kg)',
-                 'Carbon (g)','CO$_2$ (g)','Relative CO$_2$ Budget (g/kg)','Carbon ($10^{-6}$ mol/kg)','$\Psi$']
+    OptionVar = ['Alkalinity ($10^{-2}$ mol)','Alkalinity ($\mu$mol/kg)',
+                 'Carbon (g)','CO$_2$ (g)','CO$_2$ (g/kg)','Carbon ($\mu$mol/kg)','$\Psi$']
     NamesAlk = ['MusselFlesh','InorganicShell','OrganicShell','Ammonium Excretion','BudgetFaeces','Total']           
     NamesAlkcon = ['MusselFlesh','InorganicShell','OrganicShell','Ammonium Excretion','BudgetFaeces','Total']                   
     NamesC = ['OrganicFlesh','OrganicShell','InorganicShell','Respiration','DRDOC',
               'Shell Respiration','Shell DRDOC','OrganicFaeces','BudgetFaeces','Total']
-    NamesCO2 = ['OrganicFlesh','OrganicShell','InorganicShell','BioCalcification','Respiration','DRDOC',
+    NamesCO2 = ['OrganicFlesh','OrganicShell','InorganicShell','Calcification','Respiration','DRDOC',
                 'Shell Respiration','Shell DRDOC','OrganicFaeces','BudgetFaeces',
-                'Total','TotalFlesh','TotalShell','Sequestration','FleshSequestration',
-                'ShellSequestration']
+                'Total','TotalFlesh','TotalShell','Footprint','FleshFootprint',
+                'ShellFootprint']
     NamesCF = ['Mussel','Flesh','Shell','CFmussel','CFflesh','CFshell']
     VarNames = [NamesAlk,NamesAlkcon,NamesC,NamesCO2,NamesCF,NamesC,'$\Psi$']
     if options == 'Alk':
@@ -1271,6 +1271,8 @@ def plotCarbonOut(CarbonOUT,XlabelOp,options):
                 for i in range(len(VarNames[indP])):
                     plt.figure()
                     plt.plot(X,CarbonOUT[1+indP][i][Istart:],'k-',linewidth=2)
+                    if np.min(CarbonOUT[1+indP][i][Istart:])*np.max(CarbonOUT[1+indP][i][Istart:]) < 0:
+                        plt.plot(X,np.zeros(np.size(X)),'r--',linewidth=1)
                     plt.plot([X[indL50],X[indL50]],[np.min(CarbonOUT[1+indP][i]),CarbonOUT[1+indP][i][indL50+Istart]],'b:',linewidth=1)
                     plt.plot(X[:indL50],np.ones(np.size(X[:indL50]))*CarbonOUT[1+indP][i][indL50+Istart],'b:',linewidth=1)
                     plt.xlabel(Nxlabel)
@@ -1280,6 +1282,8 @@ def plotCarbonOut(CarbonOUT,XlabelOp,options):
             else: # plot Psi
                 plt.figure()
                 plt.plot(X,CarbonOUT[1+indP],'k-',linewidth=2)
+                if np.min(CarbonOUT[1+indP])*np.max(CarbonOUT[1+indP]) < 0:
+                    plt.plot(X,np.zeros(np.size(X)),'r--',linewidth=1)    
                 plt.plot([X[indL50],X[indL50]],[np.min(CarbonOUT[1+indP]),CarbonOUT[1+indP][indL50+Istart]],'b:',linewidth=1)
                 plt.plot(X[:indL50],np.ones(np.size(X[:indL50]))*CarbonOUT[1+indP][indL50+Istart],'b:',linewidth=1)
                 plt.xlabel(Nxlabel)
@@ -1291,6 +1295,8 @@ def plotCarbonOut(CarbonOUT,XlabelOp,options):
                 for i in range(len(VarNames[indP])):
                     plt.figure()
                     plt.plot(X,CarbonOUT[1+indP][i][Istart:],'k-',linewidth=2)
+                    if np.min(CarbonOUT[1+indP][i][Istart:])*np.max(CarbonOUT[1+indP][i][Istart:]) < 0:
+                        plt.plot(X,np.zeros(np.size(X)),'r--',linewidth=1)
                     plt.xlabel(Nxlabel)
                     plt.ylabel(OptionVar[indP])
                     plt.title(VarNames[indP][i]+'\n'+TextTitle)
@@ -1317,6 +1323,8 @@ def plotCarbonOut(CarbonOUT,XlabelOp,options):
                     plt.gca().xaxis.set_major_formatter(mdates.DateFormatter(T_format))
                     plt.gca().xaxis.set_major_locator(mdates.DayLocator(interval=T_interval))
                     plt.plot(X,CarbonOUT[1+indP][i][Istart:],'k-',linewidth=2)
+                    if np.min(CarbonOUT[1+indP][i][Istart:])*np.max(CarbonOUT[1+indP][i][Istart:]) < 0:
+                        plt.plot(X,np.zeros(np.size(X)),'r--',linewidth=1)
                     plt.plot([X[indL50],X[indL50]],[np.min(CarbonOUT[1+indP][i]),CarbonOUT[1+indP][i][indL50+Istart]],'b:',linewidth=1)
                     plt.plot(X[:indL50],np.ones(np.size(X[:indL50]))*CarbonOUT[1+indP][i][indL50+Istart],'b:',linewidth=1)
                     plt.gcf().autofmt_xdate()
@@ -1329,6 +1337,8 @@ def plotCarbonOut(CarbonOUT,XlabelOp,options):
                 plt.gca().xaxis.set_major_formatter(mdates.DateFormatter(T_format))
                 plt.gca().xaxis.set_major_locator(mdates.DayLocator(interval=T_interval))
                 plt.plot(X,CarbonOUT[1+indP],'k-',linewidth=2)
+                if np.min(CarbonOUT[1+indP])*np.max(CarbonOUT[1+indP]) < 0:
+                    plt.plot(X,np.zeros(np.size(X)),'r--',linewidth=1)
                 plt.plot([X[indL50],X[indL50]],[np.min(CarbonOUT[1+indP]),CarbonOUT[1+indP][indL50+Istart]],'b:',linewidth=1)
                 plt.plot(X[:indL50],np.ones(np.size(X[:indL50]))*CarbonOUT[1+indP][indL50+Istart],'b:',linewidth=1)
                 plt.gcf().autofmt_xdate()
@@ -1343,6 +1353,8 @@ def plotCarbonOut(CarbonOUT,XlabelOp,options):
                     plt.gca().xaxis.set_major_formatter(mdates.DateFormatter(T_format))
                     plt.gca().xaxis.set_major_locator(mdates.DayLocator(interval=T_interval))
                     plt.plot(X,CarbonOUT[1+indP][i][Istart:],'k-',linewidth=2)
+                    if np.min(CarbonOUT[1+indP][i][Istart:])*np.max(CarbonOUT[1+indP][i][Istart:]) < 0:
+                        plt.plot(X,np.zeros(np.size(X)),'r--',linewidth=1)
                     plt.gcf().autofmt_xdate()
                     plt.xlabel(Nxlabel)
                     plt.ylabel(OptionVar[indP])
@@ -1353,6 +1365,8 @@ def plotCarbonOut(CarbonOUT,XlabelOp,options):
                 plt.gca().xaxis.set_major_formatter(mdates.DateFormatter(T_format))
                 plt.gca().xaxis.set_major_locator(mdates.DayLocator(interval=T_interval))
                 plt.plot(X,CarbonOUT[1+indP],'k-',linewidth=2)
+                if np.min(CarbonOUT[1+indP])*np.max(CarbonOUT[1+indP] ) < 0:
+                    plt.plot(X,np.zeros(np.size(X)),'r--',linewidth=1)
                 plt.gcf().autofmt_xdate()
                 plt.xlabel(Nxlabel)
                 plt.ylabel(OptionVar[indP])
@@ -1454,6 +1468,8 @@ def plotSeacarbOut(seacarbOUT,seacarbIN,XlabelOp,options):
         for i in range(len(VarNames[indP])):
             plt.figure()
             plt.plot(X,SCplotVAR[3*indP+i,:],'k-',linewidth=2)
+            if np.min(SCplotVAR[3*indP+i,:])*np.max(SCplotVAR[3*indP+i,:]) < 0:
+                plt.plot(X,np.zeros(np.size(X)),'r--',linewidth=1)
             plt.xlabel(Nxlabel)
             plt.ylabel(OptionVar[indP])
             plt.title(VarNames[indP][i]+'\n'+TextTitle)
@@ -1467,6 +1483,8 @@ def plotSeacarbOut(seacarbOUT,seacarbIN,XlabelOp,options):
             plt.gca().xaxis.set_major_formatter(mdates.DateFormatter(T_format))
             plt.gca().xaxis.set_major_locator(mdates.DayLocator(interval=T_interval))
             plt.plot(X,SCplotVAR[3*indP+i,:],'k-',linewidth=2)
+            if np.min(SCplotVAR[3*indP+i,:])*np.max(SCplotVAR[3*indP+i,:]) < 0:
+                plt.plot(X,np.zeros(np.size(X)),'r--',linewidth=1)
             plt.gcf().autofmt_xdate()
             plt.xlabel(Nxlabel)
             plt.ylabel(OptionVar[indP])
@@ -1483,7 +1501,7 @@ def PlotSeacarbIn(seacarbIN,XlabelOp,options):
     T_format = '%m-%d' # full date '%Y-%m-%d'
     T_interval = int(np.round(len(L)/10)) # to have 10 ticklabel
     TextTitle = 'Seeding date (M-D): ' + '{:%m-%d}'.format(TT[0])
-    LabelName = ['[C] $\mu$mol/kg','[Alk] $10^{-6}$ mol/kg','$SST$ ($^{\circ}$C)','Salinity']
+    LabelName = ['[C] $\mu$mol/kg','[Alk] $\mu$mol/kg','$SST$ ($^{\circ}$C)','Salinity']
     if XlabelOp == 'L':
         X = L
         Nxlabel = '$L$ (mm)'
@@ -1501,6 +1519,8 @@ def PlotSeacarbIn(seacarbIN,XlabelOp,options):
             VP = OptionVar.index(options) 
             plt.figure()
             plt.plot(X,seacarbIN[1+VP,:],'k-',linewidth=2)
+            if np.min(seacarbIN[1+VP,:])*np.max(seacarbIN[1+VP,:]) < 0:
+                plt.plot(X,np.zeros(np.size(X)),'r--',linewidth=1)
             plt.xlabel(Nxlabel)
             plt.ylabel(LabelName[VP])
             plt.title(TextTitle)
@@ -1515,6 +1535,8 @@ def PlotSeacarbIn(seacarbIN,XlabelOp,options):
                 plt.gca().xaxis.set_major_formatter(mdates.DateFormatter(T_format))
                 plt.gca().xaxis.set_major_locator(mdates.DayLocator(interval=T_interval))
                 plt.plot(X,seacarbIN[1+i,:],'k-',linewidth=2)
+                if np.min(seacarbIN[1+i,:])*np.max(seacarbIN[1+i,:]) < 0:
+                    plt.plot(X,np.zeros(np.size(X)),'r--',linewidth=1)
                 plt.gcf().autofmt_xdate()
                 plt.xlabel(Nxlabel)
                 plt.ylabel(LabelName[i])
@@ -1527,6 +1549,8 @@ def PlotSeacarbIn(seacarbIN,XlabelOp,options):
             plt.gca().xaxis.set_major_formatter(mdates.DateFormatter(T_format))
             plt.gca().xaxis.set_major_locator(mdates.DayLocator(interval=T_interval))
             plt.plot(X,seacarbIN[1+VP,:],'k-',linewidth=2)
+            if np.min(seacarbIN[1+VP,:])*np.max(seacarbIN[1+VP,:]) < 0:
+                plt.plot(X,np.zeros(np.size(X)),'r--',linewidth=1)
             plt.gcf().autofmt_xdate()
             plt.xlabel(Nxlabel)
             plt.ylabel(LabelName[VP])
